@@ -241,19 +241,19 @@ void anaread ()
   }
 }
 void setup() {
-  dg = 1; // 1 for left portail, 0 for right, seen from inside court
+  dg = 0; // 1 for left portail, 0 for right, seen from inside court
   minmotor = 150; // value when approaching end of run
-  maxVCC = 1500;
+  maxVCC = 1000;
 
   Serial.begin(9600);
   Serial.println(dg);
   if (dg == 1) {
     Serial.println("***** portail gauche*********");
     closedelay = 1000;
+    opendelay = 0; // 0 second
   }
   else {
     Serial.println("***** portail droit*********");
-
     opendelay = 1000; // 1 second
     closedelay = 0;
   }
@@ -275,9 +275,8 @@ void setup() {
   Serial.println( maxmotorpos);
 
   Serial.print("min voltage overdrive: ");
-  Serial.println(maxVCC);
-
-
+  Serial.print(maxVCC);
+  Serial.println("mV");
 
   Serial.print("opendelay ms: ");
   Serial.println(opendelay);
@@ -310,9 +309,9 @@ void loop() {
   if (inrotation > 0 ) {
     inrotation++;
   }
-  if (inrotation > 22000.0 / delayloop) { //22 second =22000
+  if (inrotation > 25000.0 / delayloop) { //25 second =25000
     inrotation = 0;
-    Serial.println("stop motor after 22s");
+    Serial.println("stop motor after 25s");
     if (stateportail == 1) {
       stateportail = 2;
     }
@@ -329,7 +328,6 @@ void loop() {
       pressedcountrot();
       //delay(10); // 100 ms
     }
-
     old_pb = new_pb;
   }
 

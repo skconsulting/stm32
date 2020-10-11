@@ -1,6 +1,8 @@
+// 10Nov 2019
+
 // pins
-int   countrot  = PD2; // counter of rotation
-int   trig      = PD3; // change mode
+int   countrot  = PD2; // counter of rotation pull up
+int   trig      = PD3; // change rotation , trigger action pull up
 int   EMA       = PD5; // pwm motor
 int   IN1       = PD6; // command motor 1
 int   IN2       = PD7; // command motor 2
@@ -15,12 +17,12 @@ LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 char
 
 // var config
 int delayloop = 10; // 10ms
-// 100 for debug, normally 1
-double coefd = 1;
+double coefd = 1; // 100 for debug, normally 1
+int dg = 0; // 1 for left portail, 0 for right, seen from inside court
+
 
 // var util
 int stateportail = 0; // 0 repos ferme, 1 ouvre, 2 repos ouvert, 3 ferme,4 ouvert a moitie 5 ferme a moitie
-
 int maxrotationopen, maxrotationclose, calibre, inrotation;
 int halfopen, halfclose;
 int opendelay, closedelay, minmotorpos, maxmotorpos, minmotor;
@@ -30,17 +32,14 @@ int new_pb, old_pb = 1;
 int new_pb1, old_pb1 = 1;
 double meas, mesa0, meas1, meas2, measold, maxVCC ;
 int varCompteur = 0; // La variable compteur
-
+int topn = 0;
 double Voltage = 0;
 double Amps = 0;
-int dg = 0; // 1 for left portail, 0 for right, seen from inside court
 int mVperAmp;
 int ACSoffset;
 
 
-
-
-void pressedcountrot (void) // each time there is a couner increase
+void pressedcountrot (void) // each time there is a counter increase
 {
   if (stateportail == 3) {//ferme
     countrotation++;
@@ -74,6 +73,7 @@ void pressedcountrot (void) // each time there is a couner increase
       analogWrite(EMA, minmotor);
     }
   }
+  Serial.print("rotation count");
   Serial.println(countrotation);
   lcd.setCursor(6, 1); // set the cursor to column 15, line 0
   lcd.print("o");
@@ -113,8 +113,7 @@ void reposportail() {
   varCompteur = 0;
 }
 
-void actionportail() {// 0 repos ferme, 1 ouvre, 2 repos ouvert, 3 ferme,4 ouvert a moitie 5 ferme a moitie
-
+void actionportail() {// 0 repos ferme, 1 ouvre, 2 repos ouvert, 3 ferme,4 ouvert a moitie, 5 ferme a moitie
   lcd.setCursor(0, 0); // set the cursor to column 15, line 0
   switch (stateportail) {
     case 0: {
@@ -146,36 +145,36 @@ void actionportail() {// 0 repos ferme, 1 ouvre, 2 repos ouvert, 3 ferme,4 ouver
         break;
       }
     case 4: {
-        if (countrotation < halfopen)
-        {
-          Serial.println("a moitie ouvert!");
-          lcd.print("1/2ouver");
-          reposportail();
-          countrotation = maxrotationclose - countrotation;
-        }
-        else {
-          Serial.println("1/2 ouvert et ferme!");
-          lcd.print("1/2o fe!");
-          stateportail = 3;
-          fermeportail();
-          countrotation = maxrotationclose - countrotation;
-        }
+        //        if (countrotation < halfopen)
+        //        {
+        //        Serial.println("a moitie ouvert!");
+        //        lcd.print("1/2ouver");
+        //        reposportail();
+        //        countrotation = maxrotationclose - countrotation;
+        //        }
+        //        else {
+        Serial.println("1/2 ouvert et ferme!");
+        lcd.print("1/2o fe!");
+        stateportail = 3;
+        fermeportail();
+        countrotation = maxrotationclose - countrotation;
+        //        }
         break;
       }
     case 5: {
-        if (countrotation < halfclose) {
-          Serial.println("a moitie ferme!");
-          lcd.print("1/2ferme");
-          reposportail();
-          countrotation = maxrotationopen - countrotation;
-        }
-        else {
-          Serial.println("a moitie fermé et ouvre!");
-          lcd.print("1/2f ou!");
-          stateportail = 1;
-          ouvreportail();
-          countrotation = maxrotationclose - countrotation;
-        }
+        //        if (countrotation < halfclose) {
+        //        Serial.println("a moitie ferme!");
+        //        lcd.print("1/2ferme");
+        //        reposportail();
+        //        countrotation = maxrotationopen - countrotation;
+        //        }
+        //        else {
+        Serial.println("a moitie fermé et ouvre!");
+        lcd.print("1/2f ou!");
+        stateportail = 1;
+        ouvreportail();
+        countrotation = maxrotationclose - countrotation;
+        //        }
         break;
       }
   }
@@ -223,6 +222,7 @@ void anaread ()
   delay(10); // 10 ms
   meas2 = analogRead(sensor); // Converts and read the analog input value (value from 0.0 to 1.0)
   meas = (meas0 + meas1 + meas2) / 3;
+  // Serial.println(meas );
   if ((meas - measold > 5) || (measold - meas > 5)) {
     //delay(500);
     //Serial.print("measure = : ");
@@ -234,11 +234,11 @@ void anaread ()
     measold = meas;
 
     if (Voltage < maxVCC) {
-      delay(50); // 100 ms
+      delay(70); // 100 ms
       meas0 = analogRead(sensor); // Converts and read the analog input value (value from 0.0 to 1.0)
-      delay(10); // 10 ms
+      delay(120); // 10 ms
       meas1 = analogRead(sensor); // Converts and read the analog input value (value from 0.0 to 1.0)
-      delay(10); // 10 ms
+      delay(20); // 10 ms
       meas2 = analogRead(sensor); // Converts and read the analog input value (value from 0.0 to 1.0)
       meas = (meas0 + meas1 + meas2) / 3;
       Voltage = (meas / 1024.0) * 5000; // Gets you mV
@@ -314,13 +314,13 @@ void setup() {
     Serial.println("***** portail gauche*********");
     closedelay = 1000;
     opendelay = 0; // 0 second
-    maxVCC = 600;
+    maxVCC = 2000;//
   }
   else {
     Serial.println("***** portail droit*********");
     opendelay = 1000; // 1.5 second
     closedelay = 0;
-    maxVCC = 2500;
+    maxVCC = 2000;
   }
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode (countrot, INPUT_PULLUP);
@@ -374,8 +374,43 @@ void loop() {
   if (inrotation > 0 ) {
     inrotation++;
   }
-  if (inrotation > 8000.0 * coefd / delayloop) { //24 second =8000 for coefd=1 and 10ms delay
+  topn = inrotation / 2.4 / delayloop ;
+  if (topn > 0) {
+    //Serial.println(topn);
+    lcd.setCursor(9, 0); // set the cursor to column 15, line 0
+    lcd.print(topn);
+    lcd. print(" s");
+  }
+
+  if (inrotation > 6800.0 * coefd / delayloop) { //24 second =8000 for coefd=1 and 10ms delay
     inrotation = 0;
+
+    if (calibre == 2) {
+      maxrotationclose = countrotation;
+      halfclose = int(0.5 * maxrotationclose);
+      minmotorpos = int(0.9 * maxrotationclose);
+      //minmotorpos = maxrotationclose - 1;
+      stateportail = 0;
+      actionportail();
+      calibre = 0;
+      lcd.setCursor(8, 0); // set the cursor to column 15, line 0
+      lcd.print(" cal fer");
+      Serial.print("calibration maxrotationoclose: ");
+      Serial.println(maxrotationclose);
+    }
+    if (calibre == 1) {
+      maxrotationopen = countrotation;
+      //minmotorpos = int(0.1 * maxrot
+      halfopen = int(0.5 * maxrotationopen);
+      maxmotorpos = int(0.9 * maxrotationopen);
+      stateportail = 2;
+      actionportail();
+      calibre = 2;
+      lcd.setCursor(8, 0); // set the cursor to column 15, line 0
+      lcd.print(" cal ope");
+      Serial.print("calibration maxrotationopen: ");
+      Serial.println(maxrotationopen);
+    }
     Serial.println("stop motor after 25s");
     lcd.setCursor(8, 0); // set the cursor to column 15, line 0
     lcd.print(" timeove");

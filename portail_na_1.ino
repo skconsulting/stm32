@@ -18,7 +18,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 char
 // var config
 int delayloop = 10; // 10ms
 double coefd = 1; // 100 for debug, normally 1
-int dg = 0; // 1 for left portail, 0 for right, seen from inside court
+int dg = 0
+         ; // 1 for left portail, 0 for right, seen from inside court
 
 
 // var util
@@ -93,22 +94,28 @@ void ouvreportail()
 {
   varCompteur = 1;
   inrotation = 1;
+  analogWrite(EMA, 0);
+  delay(10);
   digitalWrite(IN1, 1);
   digitalWrite(IN2, 0);
+  delay(10);
   analogWrite(EMA, 255);
 }
 void fermeportail()
 {
   varCompteur = 1;
   inrotation = 1;
+  analogWrite(EMA, 0);
+  delay(10);
   digitalWrite(IN1, 0);
   digitalWrite(IN2, 1);
+  delay(10);
   analogWrite(EMA, 255);
 }
 void reposportail() {
+  analogWrite(EMA, 0);
   digitalWrite(IN1, 0);
   digitalWrite(IN2, 0);
-  analogWrite(EMA, 0);
   inrotation = 0;
   varCompteur = 0;
 }
